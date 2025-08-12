@@ -144,7 +144,11 @@ function EFFECT:Render()
     local Last = nil
     local ang = self.Entity:GetForward():Angle()
     for i = 0, 360, 10 do
-        local vec = math.sin(math.rad(i)) * self.Scale * math.random(9, 11) * (2 - fadeOut) * ang:Up()
+        local vec = math.sin(math.rad(i))
+                * self.Scale
+                * math.random(9, 11)
+                * (2 - fadeOut)
+                * ang:Up()
             + math.cos(math.rad(i)) * self.Scale * math.random(9, 11) * (2 - fadeOut) * ang:Right()
             + self.EndPos
             - ang:Forward() * 100
