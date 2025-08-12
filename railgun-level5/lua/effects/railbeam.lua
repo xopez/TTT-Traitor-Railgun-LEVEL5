@@ -1,16 +1,25 @@
 if SERVER then
     AddCSLuaFile()
 end
---local EFFECT={}
-EFFECT.Mat = Material("effects/tracer_middle") --"effects/strider_tracer" ) -- "sprites/flamelet5" )--"sprites/yellowflare" ) --
-EFFECT.HelixMat = Material("sprites/tp_beam001") -- "sprites/flamelet5" )--"" ) --
+EFFECT.Mat = Material("effects/tracer_middle")
+EFFECT.HelixMat = Material("sprites/tp_beam001")
 EFFECT.Refract = Material("particle/particle_glow_03_additive")
-EFFECT.Particles = Material("sprites/magic")
-EFFECT.Dust = Material("particle/smokesprites_0001")
 EFFECT.MaxLife = 2
-if CLIENT and PEmitterRockets == nil then
+if CLIENT and not PEmitterRockets then
     PEmitterRockets = ParticleEmitter(Vector(0, 0, 0))
 end
+
+local sounds_start = {
+    { "ambient/energy/weld1.wav", 100, 220 },
+    { "ambient/explosions/citadel_end_explosion2.wav", 240, 220 },
+    { "ambient/explosions/explode_6.wav", 140, 220 },
+    { "ambient/energy/weld2.wav", 240, 220 },
+}
+local sounds_end = {
+    { "ambient/explosions/citadel_end_explosion2.wav", 180, 220 },
+    { "ambient/explosions/explode_6.wav", 70, 220 },
+    { "ambient/energy/weld2.wav", 90, 220 },
+}
 
 function EFFECT:Init(data)
     self.StartPos = data:GetStart()
@@ -18,36 +27,29 @@ function EFFECT:Init(data)
     self.Angles = data:GetAngles()
     self.Scale = data:GetScale()
     self.LifeTime = CurTime() + self.MaxLife
-    self.Shoot1 = Sound("ambient/energy/weld1.wav")
-    self.Shoot2 = Sound("ambient/explosions/citadel_end_explosion2.wav")
-    self.Shoot3 = Sound("ambient/explosions/explode_6.wav")
-    self.Shoot4 = Sound("ambient/energy/weld2.wav")
 
-    local norm = (self.EndPos - self.StartPos)
+    local norm = self.EndPos - self.StartPos
     local ang = norm:Angle()
     self.Entity:SetAngles(ang)
-
     self.Entity:SetPos(self.EndPos - norm / 2)
-    sound.Play(self.Shoot1, self.StartPos, 100, 220)
-    sound.Play(self.Shoot2, self.StartPos, 240, 220)
-    sound.Play(self.Shoot3, self.StartPos, 140, 220)
-    sound.Play(self.Shoot4, self.StartPos, 240, 220)
 
-    sound.Play(self.Shoot2, self.EndPos, 180, 220)
-    sound.Play(self.Shoot3, self.EndPos, 70, 220)
-    sound.Play(self.Shoot4, self.EndPos, 90, 220)
+    for _, snd in ipairs(sounds_start) do
+        sound.Play(snd[1], self.StartPos, snd[2], snd[3])
+    end
+    for _, snd in ipairs(sounds_end) do
+        sound.Play(snd[1], self.EndPos, snd[2], snd[3])
+    end
 
     for i = 1, 150 do
         local rand = math.random(1, 16)
-        self.Dust =
-            Material("particle/smokesprites_00" .. (rand < 10 and "0" .. rand or "" .. rand))
+        local dustMat = Material("particle/smokesprites_00" .. string.format("%02d", rand))
         local part = PEmitterRockets:Add(
-            self.Dust,
+            dustMat,
             self.EndPos
                 - self.Entity:GetForward() * math.random(200, 700)
                 + VectorRand() * math.random(1, 200)
         )
-        if part ~= nil then
+        if part then
             part:SetColor(155, 155, 155)
             part:SetVelocity(
                 Vector(math.random(-20, 20), math.random(-20, 20), math.random(-20, -50))
@@ -57,7 +59,7 @@ function EFFECT:Init(data)
             part:SetStartSize(math.random(50, 100))
             part:SetEndSize(math.random(0, 30))
             part:SetAngles(Angle(30, 0, 0))
-            part:SetRollDelta(math.random(-1, 1) / 2)
+            part:SetRollDelta(math.Rand(-0.5, 0.5))
             part:SetStartAlpha(150)
             part:SetEndAlpha(0)
             part:SetBounce(0.5)
