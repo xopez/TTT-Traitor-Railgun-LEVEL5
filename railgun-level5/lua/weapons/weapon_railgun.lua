@@ -16,7 +16,6 @@ SWEP.Primary.Delay = 5
 SWEP.Primary.DefaultClip = 1
 SWEP.Primary.ClipSize = 1
 SWEP.Primary.Automatic = false
-SWEP.Primary.CoinStart = Sound("weapons/coin/coin_tossstart.mp3")
 SWEP.Primary.Coin = Sound("weapons/coin/coin_toss.mp3")
 SWEP.Primary.CoinDrop = Sound("ambient/energy/zap9.wav")
 
@@ -52,11 +51,8 @@ function SWEP:PrimaryAttack()
     if not self:CanPrimaryAttack() then
         return
     end
-    self.Weapon:EmitSound(self.Primary.CoinStart)
-    timer.Simple(1.5, function()
-        self.Weapon:EmitSound(self.Primary.Coin)
-        self:ThrowCoin()
-    end)
+    self.Weapon:EmitSound(self.Primary.Coin)
+    self:ThrowCoin()
     return
 end
 
