@@ -80,25 +80,34 @@ function EFFECT:Render()
     local Ang = (EndPos - StartPos):GetNormal():Angle()
     local Forward, Right, Up = Ang:Forward(), Ang:Right(), Ang:Up()
     local Distance = StartPos:Distance(EndPos)
-    local StepSize = 10
+    local StepSize = 4
     local fadeOut = ((self.LifeTime - CurTime()) / self.MaxLife + 0.5) ^ 2
-    local RingRadius = self.Scale
-    local RingTightness = 5
+    local RingRadius = self.Scale * 0.35
+    local RingTightness = 18
+    local mainColor = Color(240, 250, 255, 255)
+    local outlineColor = Color(120, 180, 255, 60 * fadeOut)
+    local helixColor = Color(180, 220, 255, 220)
+    local sparkColor = Color(200, 240, 255, 220)
+    local glowColor1 = Color(200, 240, 255, 255 * fadeOut)
+    local glowColor2 = Color(120, 180, 255, 120 * fadeOut)
+    local flashColor = Color(255, 255, 255, 255 * math.min(1, fadeOut * 2))
 
-    -- Glow sprites
+    -- Very bright flash at the start point
     render.SetMaterial(self.Refract)
-    render.DrawSprite(
-        EndPos + Forward,
-        56 * fadeOut,
-        56 * fadeOut,
-        Color(255, 255, 255, 255 * fadeOut)
-    )
-    render.DrawSprite(StartPos, 128 * fadeOut, 128 * fadeOut, Color(255, 255, 255, 255 * fadeOut))
+    render.DrawSprite(StartPos, 120 * fadeOut, 120 * fadeOut, flashColor)
 
-    -- Helix
+    -- Glow sprites (smaller, more focused)
+    render.DrawSprite(EndPos + Forward, 32 * fadeOut, 32 * fadeOut, glowColor1)
+    render.DrawSprite((StartPos + EndPos) / 2, 36 * fadeOut, 36 * fadeOut, glowColor2)
+
+    -- Thin, bright outline
+    render.SetMaterial(self.Mat)
+    render.DrawBeam(StartPos, EndPos, 2.5 * RingRadius * fadeOut, 0, 0, outlineColor)
+
+    -- Fast, tight helix
     render.SetMaterial(self.HelixMat)
     local LastPos
-    local radMult = math.rad(RingTightness * fadeOut)
+    local radMult = math.rad(RingTightness * fadeOut * 2)
     for i = 1, Distance, StepSize do
         local sin, cos = math.sin(i * radMult), math.cos(i * radMult)
         local Pos = StartPos
@@ -106,12 +115,31 @@ function EFFECT:Render()
             + Up * sin * RingRadius * fadeOut
             + Right * cos * RingRadius * fadeOut
         if LastPos then
-            render.DrawBeam(LastPos, Pos, 3 * fadeOut * RingRadius, 0, 0, Color(155, 155, 255, 255))
+            render.DrawBeam(LastPos, Pos, 1.2 * fadeOut * RingRadius, 0, 0, helixColor)
         end
         LastPos = Pos
     end
 
-    -- Main beam
+    -- Main beam (extremely thin, very bright)
     render.SetMaterial(self.Mat)
-    render.DrawBeam(StartPos, EndPos, 4 * RingRadius * fadeOut, 0, 0, Color(155, 155, 255, 255))
+    render.DrawBeam(StartPos, EndPos, 1.1 * RingRadius * fadeOut, 0, 0, mainColor)
+
+    -- Long, bright electric sparks/arcs in segments
+    render.SetMaterial(self.Mat)
+    for i = 1, 10 do
+        local t = math.Rand(0.05, 0.95)
+        local base = LerpVector(t, StartPos, EndPos)
+        local arcDir = (Right * math.Rand(-1, 1) + Up * math.Rand(-1, 1)):GetNormalized()
+        local arcLen = math.Rand(24, 48)
+        local arcEnd = base + arcDir * arcLen
+        -- Segmented sparks
+        local segs = math.random(2, 4)
+        local prev = base
+        for s = 1, segs do
+            local segT = s / segs
+            local segPos = LerpVector(segT, base, arcEnd) + VectorRand() * 2
+            render.DrawBeam(prev, segPos, math.Rand(0.7, 1.2), 0, 1, sparkColor)
+            prev = segPos
+        end
+    end
 end
