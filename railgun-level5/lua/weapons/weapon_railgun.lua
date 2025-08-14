@@ -51,6 +51,9 @@ function SWEP:PrimaryAttack()
     if not self:CanPrimaryAttack() then
         return
     end
+    if self.ShotPending then
+        return
+    end
     self.Weapon:EmitSound(self.Primary.Coin)
     self:ThrowCoin()
     return
@@ -64,6 +67,7 @@ end
 function SWEP:ThrowCoin()
     self:SendWeaponAnim(ACT_VM_PRIMARYATTACK)
     self.Timer = CurTime() + self.Weapon:SequenceDuration() - 0.15
+    self.ShotPending = true
     return
 end
 
@@ -72,9 +76,10 @@ function SWEP:ShouldDropOnDie()
 end
 
 function SWEP:Think()
-    if self.Timer < CurTime() and self.Timer ~= 0 then
+    if self.Timer < CurTime() and self.Timer ~= 0 and self.ShotPending then
         self:FireCoin()
         self.Timer = 0
+        self.ShotPending = false
         timer.Simple(1, function()
             if not IsValid(self.Entity) then
                 return
@@ -236,6 +241,7 @@ end
 function SWEP:Initialize()
     self:SetWeaponHoldType(self.HoldType)
     self.Timer = 0
+    self.ShotPending = false
     if CLIENT then
         self.ViewModel = "models/weapons/c_coin.mdl"
         self.WorldModel = "models/weapons/w_coin.mdl"
@@ -247,5 +253,6 @@ function SWEP:Holster(wep)
         return
     end
     self.Timer = 0
+    self.ShotPending = false
     return true
 end
