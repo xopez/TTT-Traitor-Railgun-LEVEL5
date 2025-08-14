@@ -41,7 +41,7 @@ function EFFECT:Init(data)
     for _, s in ipairs(soundDelays) do
         timer.Simple(s.delay, function()
             if IsValid(self) then
-                sound.Play(s.snd, self.StartPos, 100, 220)
+                sound.Play(s.snd, self.StartPos, 140, 220)
             end
         end)
     end
